@@ -117,6 +117,7 @@ fn split_attr_string(s: &str) -> Vec<String> {
 }
 
 // Helper function to parse attributes
+#[derive(Default)]
 pub struct FieldAttributes {
     pub visibility: Option<Visibility>,
     pub with_prefix: bool,
@@ -124,19 +125,6 @@ pub struct FieldAttributes {
     pub into: bool,
     pub is_const: bool,
     pub skip: bool,
-}
-
-impl Default for FieldAttributes {
-    fn default() -> Self {
-        FieldAttributes {
-            visibility: None,
-            with_prefix: false,
-            optional: false,
-            into: false,
-            is_const: false,
-            skip: false,
-        }
-    }
 }
 
 pub fn parse_attributes(attr: Option<&Meta>) -> FieldAttributes {
@@ -186,18 +174,17 @@ pub fn parse_attributes(attr: Option<&Meta>) -> FieldAttributes {
     }
 
     // Validate skip is not combined with other attributes
-    if attrs.skip {
-        if attrs.with_prefix
+    if attrs.skip
+        & (attrs.with_prefix
             || attrs.optional
             || attrs.into
             || attrs.is_const
-            || attrs.visibility.is_some()
-        {
-            abort!(
-                nv.value.span(),
-                "The 'skip' attribute cannot be combined with any other parameters"
-            );
-        }
+            || attrs.visibility.is_some())
+    {
+        abort!(
+            nv.value.span(),
+            "The 'skip' attribute cannot be combined with any other parameters"
+        );
     }
 
     attrs
